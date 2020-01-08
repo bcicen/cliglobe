@@ -1,16 +1,17 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"time"
 )
 
-const framesep = "\x1b[H"
-const color = "\033[38;2;127;233;162m"
-const reset = "\033[0m"
-const clear = "\033[H\033[J"
+const (
+	framesep = "\x1b[H"
+	color    = "\033[38;2;127;233;162m"
+	reset    = "\033[0m"
+	clear    = "\033[H\033[J"
+	lpadding = "   "
+)
 
 var gradiant = []string{
 	"\033[38;2;133;232;166m",
@@ -27,27 +28,7 @@ var gradiant = []string{
 	"\033[38;2;133;232;166m",
 }
 
-func readLines(path string) ([]string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	return lines, nil
-}
-
 func main() {
-	//lines, err := readLines("./ascsaver.art/globe.vt")
-	//if err != nil {
-	//panic(err)
-	//}
-
 	var ng int
 	for {
 		for _, frame := range globe {
@@ -59,8 +40,7 @@ func main() {
 				if ng >= len(gradiant) {
 					ng = 0
 				}
-				fmt.Printf("   ")
-				fmt.Println(line)
+				fmt.Println(lpadding + line)
 			}
 			time.Sleep(150 * time.Millisecond)
 		}
