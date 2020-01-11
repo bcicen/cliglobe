@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 	"time"
 )
 
@@ -29,20 +31,40 @@ var gradiant = []string{
 }
 
 func main() {
+	var (
+		sigCh = make(chan os.Signal)
+		strCh = make(chan string)
+	)
+
+	go func() {
+		for {
+			select {
+			case s := <-strCh:
+				fmt.Printf(s)
+			case <-sigCh:
+				fmt.Println(reset)
+				fmt.Println(clear)
+				os.Exit(0)
+			}
+		}
+	}()
+
+	signal.Notify(sigCh, os.Interrupt)
+
 	var ng int
 	for {
 		for _, frame := range globe {
-			fmt.Println(clear)
+			strCh <- clear
 			for _, line := range frame {
 				// apply color
-				fmt.Printf(gradiant[ng])
+				strCh <- gradiant[ng]
 				ng++
 				if ng >= len(gradiant) {
 					ng = 0
 				}
-				fmt.Println(lpadding + line)
+				strCh <- lpadding + line + "\n"
 			}
-			time.Sleep(150 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }
