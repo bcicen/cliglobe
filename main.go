@@ -9,11 +9,13 @@ import (
 )
 
 const (
-	framesep = "\x1b[H"
-	color    = "\033[38;2;127;233;162m"
-	reset    = "\033[0m"
-	clear    = "\033[H\033[J"
-	lpadding = "   "
+	framesep  = "\x1b[H"
+	color     = "\033[38;2;127;233;162m"
+	reset     = "\033[0m"
+	clear     = "\033[H\033[J"
+	lpadding  = "   "
+	tspadding = "        "
+	tsfmt     = "2006-01-02 15:04:05.00000 -0700 MST "
 )
 
 var gradiant = []string{
@@ -34,7 +36,8 @@ var gradiant = []string{
 func main() {
 
 	var (
-		rate = flag.String("rate", "100ms", "globe rotation rate")
+		rate  = flag.String("rate", "100ms", "globe rotation rate")
+		clock = flag.Bool("clock", false, "show clock below globe")
 	)
 
 	flag.Parse()
@@ -68,7 +71,7 @@ func main() {
 	var ng int
 	for {
 		for _, frame := range globe {
-			strCh <- clear
+			strCh <- clear + "\n"
 			for _, line := range frame {
 				// apply color
 				strCh <- gradiant[ng]
@@ -77,6 +80,10 @@ func main() {
 					ng = 0
 				}
 				strCh <- lpadding + line + "\n"
+			}
+			if *clock {
+				strCh <- gradiant[0]
+				strCh <- "\n" + tspadding + time.Now().Format(tsfmt)
 			}
 			time.Sleep(duration)
 		}
