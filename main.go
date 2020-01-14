@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -31,6 +32,19 @@ var gradiant = []string{
 }
 
 func main() {
+
+	var (
+		rate = flag.String("rate", "100ms", "globe rotation rate")
+	)
+
+	flag.Parse()
+
+	duration, err := time.ParseDuration(*rate)
+	if err != nil {
+		fmt.Printf("bad duration: %s\n", *rate)
+		os.Exit(1)
+	}
+
 	var (
 		sigCh = make(chan os.Signal)
 		strCh = make(chan string)
@@ -64,7 +78,7 @@ func main() {
 				}
 				strCh <- lpadding + line + "\n"
 			}
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(duration)
 		}
 	}
 }
