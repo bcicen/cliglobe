@@ -1,16 +1,17 @@
 package main
 
 import (
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 )
 
 const (
 	framesep  = "\x1b[H"
-	color     = "\033[38;2;127;233;162m"
 	reset     = "\033[0m"
 	clear     = "\033[H\033[J"
 	lpadding  = "   "
@@ -18,26 +19,37 @@ const (
 	tsfmt     = "2006-01-02 15:04:05.00000 -0700 MST "
 )
 
-var gradiant = []string{
-	"\033[38;2;133;232;166m",
-	"\033[38;2;118;210;149m",
-	"\033[38;2;096;181;124m",
-	"\033[38;2;084;162;110m",
-	"\033[38;2;073;145;097m",
-	"\033[38;2;063;129;085m",
-	"\033[38;2;063;129;085m",
-	"\033[38;2;073;145;097m",
-	"\033[38;2;084;162;110m",
-	"\033[38;2;096;181;124m",
-	"\033[38;2;118;210;149m",
-	"\033[38;2;133;232;166m",
+func hexToRGB(h string) (rgb [3]uint8) {
+	h = strings.Replace(h, "#", "", -1)
+
+	var hb []byte
+	hb, err := hex.DecodeString(h)
+	if err != nil {
+		fmt.Printf("bad hex code: %s\n", h)
+		os.Exit(1)
+	}
+
+	if len(hb) > 0 {
+		rgb[0] = uint8(hb[0])
+	}
+	if len(hb) > 1 {
+		rgb[1] = uint8(hb[1])
+	}
+	if len(hb) > 2 {
+		rgb[2] = uint8(hb[2])
+	}
+	return
 }
 
 func main() {
 
 	var (
-		rate  = flag.String("rate", "100ms", "globe rotation rate")
-		clock = flag.Bool("clock", false, "show clock below globe")
+		startColor = flag.String("startColor", "#3f8155", "start hex code for gradiant colorizer")
+		endColor   = flag.String("endColor", "#85e8a6", "ending hex code for gradiant colorizer")
+		shades     = flag.Int("shades", 5, "number of shades for gradiant colorizer")
+		random     = flag.Bool("random", false, "use randomized colors")
+		rate       = flag.String("rate", "100ms", "globe rotation rate")
+		clock      = flag.Bool("clock", false, "show clock below globe")
 	)
 
 	flag.Parse()
@@ -68,21 +80,29 @@ func main() {
 
 	signal.Notify(sigCh, os.Interrupt)
 
-	var ng int
+	var colorizer Colorizer
+
+	if *random {
+		colorizer = Random{}
+	} else {
+		colorizer = NewGradiant(*shades, hexToRGB(*startColor), hexToRGB(*endColor))
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	for {
 		for _, frame := range globe {
 			strCh <- clear + "\n"
 			for _, line := range frame {
 				// apply color
-				strCh <- gradiant[ng]
-				ng++
-				if ng >= len(gradiant) {
-					ng = 0
-				}
+				strCh <- colorizer.Next()
 				strCh <- lpadding + line + "\n"
 			}
 			if *clock {
-				strCh <- gradiant[0]
+				strCh <- colorizer.Base()
 				strCh <- "\n" + tspadding + time.Now().Format(tsfmt)
 			}
 			time.Sleep(duration)
