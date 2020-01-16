@@ -60,6 +60,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	var (
 		sigCh = make(chan os.Signal)
 		strCh = make(chan string)
@@ -86,11 +91,6 @@ func main() {
 		colorizer = Random{}
 	} else {
 		colorizer = NewGradiant(*shades, hexToRGB(*startColor), hexToRGB(*endColor))
-	}
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
 	}
 
 	for {
