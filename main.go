@@ -11,12 +11,18 @@ import (
 )
 
 const (
-	framesep  = "\x1b[H"
-	reset     = "\033[0m"
-	clear     = "\033[H\033[J"
-	lpadding  = "   "
-	tspadding = "        "
-	tsfmt     = "2006-01-02 15:04:05.00000 -0700 MST "
+	framesep = "\x1b[H"
+	reset    = "\033[0m"
+	clear    = "\033[H\033[J"
+	tsfmt    = "2006-01-02 15:04:05.00000 -0700 MST "
+	gWidth   = 47
+	gHeight  = 23
+)
+
+var (
+	xpad  = 3
+	ypad  = 1
+	tspad = 8 // clock padding
 )
 
 func hexToRGB(h string) (rgb [3]uint8) {
@@ -50,6 +56,7 @@ func main() {
 		random     = flag.Bool("random", false, "use randomized colors")
 		rate       = flag.String("rate", "100ms", "globe rotation rate")
 		clock      = flag.Bool("clock", false, "show clock below globe")
+		center     = flag.Bool("center", false, "center globe in terminal")
 	)
 
 	flag.Parse()
@@ -93,13 +100,24 @@ func main() {
 		colorizer = NewGradiant(*shades, hexToRGB(*startColor), hexToRGB(*endColor))
 	}
 
+	if *center {
+		w, h := getSize()
+		xpad = (w - gWidth) / 2
+		ypad = (h - gHeight) / 2
+		tspad = xpad + 5
+	}
+
+	xpadding := strings.Repeat(" ", xpad)
+	ypadding := strings.Repeat("\n", ypad)
+	tspadding := strings.Repeat(" ", tspad)
+
 	for {
 		for _, frame := range globe {
-			strCh <- clear + "\n"
+			strCh <- clear + ypadding
 			for _, line := range frame {
 				// apply color
 				strCh <- colorizer.Next()
-				strCh <- lpadding + line + "\n"
+				strCh <- xpadding + line + "\n"
 			}
 			if *clock {
 				strCh <- colorizer.Base()
