@@ -57,6 +57,7 @@ func main() {
 		rate       = flag.String("rate", "100ms", "globe rotation rate")
 		clock      = flag.Bool("clock", false, "show clock below globe")
 		center     = flag.Bool("center", false, "center globe in terminal")
+		nocolor    = flag.Bool("nocolor", false, "disable globe colors")
 	)
 
 	flag.Parse()
@@ -94,9 +95,12 @@ func main() {
 
 	var colorizer Colorizer
 
-	if *random {
+	switch {
+	case *random:
 		colorizer = Random{}
-	} else {
+	case *nocolor:
+		colorizer = NoColor{}
+	default:
 		colorizer = NewGradiant(*shades, hexToRGB(*startColor), hexToRGB(*endColor))
 	}
 

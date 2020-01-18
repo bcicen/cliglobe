@@ -62,6 +62,12 @@ func (g *Gradiant) Base() string {
 	return EscapeCode(g.colors[0][0], g.colors[0][1], g.colors[0][2])
 }
 
+// NoColor implements a colorless Colorizer
+type NoColor struct{}
+
+func (c NoColor) Next() string { return "" }
+func (c NoColor) Base() string { return "" }
+
 // Random implements a randomized Colorizer
 type Random struct{}
 
